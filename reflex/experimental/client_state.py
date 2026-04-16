@@ -192,20 +192,7 @@ class ClientStateVar(Var):
         Returns:
             an accessor for the client state variable.
         """
-        return (
-            Var(
-                _js_expr=(
-                    _client_state_ref_dict(self._getter_name) + f"[{self._id_name}]"
-                    if self._global_ref
-                    else self._getter_name
-                ),
-                _var_data=self._var_data,
-            )
-            .to(self._var_type)
-            ._replace(
-                merge_var_data=VarData(imports=_refs_import if self._global_ref else {})
-            )
-        )
+        pass
 
     def set_value(self, value: Any = NoValue) -> Var:
         """Set the value of the client state variable.
@@ -220,28 +207,7 @@ class ClientStateVar(Var):
         Returns:
             A special EventChain Var which will set the value when triggered.
         """
-        var_data = VarData(imports=_refs_import if self._global_ref else {})
-
-        setter = (
-            Var(_client_state_ref(self._setter_name))
-            if self._global_ref
-            else Var(self._setter_name, _var_data=var_data)
-        ).to(FunctionVar)
-
-        if value is not NoValue:
-            # This is a hack to make it work like an EventSpec taking an arg
-            value_var = LiteralVar.create(value)
-            value_str = str(value_var)
-
-            setter = ArgsFunctionOperationBuilder.create(
-                # remove patterns of ["*"] from the value_str using regex
-                args_names=(re.sub(r"(\?\.)?\[\".*\"\]", "", value_str),)
-                if value_str.startswith("_")
-                else (),
-                return_expr=setter.call(value_var),
-            )
-
-        return setter.to(FunctionVar, EventChain)
+        pass
 
     @property
     def set(self) -> Var:
@@ -254,7 +220,7 @@ class ClientStateVar(Var):
         Returns:
             A special EventChain Var which will set the value when triggered.
         """
-        return self.set_value()
+        pass
 
     def retrieve(self, callback: EventHandler | Callable | None = None) -> EventSpec:
         """Pass the value of the client state variable to a backend EventHandler.
@@ -270,10 +236,7 @@ class ClientStateVar(Var):
         Raises:
             ValueError: If the ClientStateVar is not global.
         """
-        if not self._global_ref:
-            msg = "ClientStateVar must be global to retrieve the value."
-            raise ValueError(msg)
-        return run_script(_client_state_ref(self._getter_name), callback=callback)
+        pass
 
     def push(self, value: Any) -> EventSpec:
         """Push a value to the client state variable from the backend.
@@ -289,8 +252,4 @@ class ClientStateVar(Var):
         Raises:
             ValueError: If the ClientStateVar is not global.
         """
-        if not self._global_ref:
-            msg = "ClientStateVar must be global to push the value."
-            raise ValueError(msg)
-        value = Var.create(value)
-        return run_script(f"{_client_state_ref(self._setter_name)}({value})")
+        pass

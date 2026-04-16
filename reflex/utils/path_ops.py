@@ -136,7 +136,7 @@ def ls(path: str | Path) -> list[Path]:
     Returns:
         A list of paths to the contents of the directory.
     """
-    return list(Path(path).iterdir())
+    pass
 
 
 def ln(src: str | Path, dest: str | Path, overwrite: bool = False) -> bool:
@@ -150,17 +150,7 @@ def ln(src: str | Path, dest: str | Path, overwrite: bool = False) -> bool:
     Returns:
         Whether the link was successful.
     """
-    src, dest = Path(src), Path(dest)
-    if src == dest:
-        return False
-    if not overwrite and (dest.exists() or dest.is_symlink()):
-        return False
-    if src.is_dir():
-        rm(dest)
-        src.symlink_to(dest, target_is_directory=True)
-    else:
-        src.symlink_to(dest)
-    return True
+    pass
 
 
 def which(program: str | Path) -> Path | None:

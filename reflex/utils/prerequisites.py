@@ -281,54 +281,7 @@ def _can_colorize() -> bool:
     Returns:
         If the output can be colorized
     """
-    import io
-    import os
-
-    def _safe_getenv(k: str, fallback: str | None = None) -> str | None:
-        """Exception-safe environment retrieval. See gh-128636.
-
-        Args:
-            k: The environment variable key.
-            fallback: The fallback value if the environment variable is not set.
-
-        Returns:
-            The value of the environment variable or the fallback value.
-        """
-        try:
-            return os.environ.get(k, fallback)
-        except Exception:
-            return fallback
-
-    file = sys.stdout
-
-    if not sys.flags.ignore_environment:
-        if _safe_getenv("PYTHON_COLORS") == "0":
-            return False
-        if _safe_getenv("PYTHON_COLORS") == "1":
-            return True
-    if _safe_getenv("NO_COLOR"):
-        return False
-    if _safe_getenv("FORCE_COLOR"):
-        return True
-    if _safe_getenv("TERM") == "dumb":
-        return False
-
-    if not hasattr(file, "fileno"):
-        return False
-
-    if sys.platform == "win32":
-        try:
-            import nt
-
-            if not nt._supports_virtual_terminal():
-                return False
-        except (ImportError, AttributeError):
-            return False
-
-    try:
-        return os.isatty(file.fileno())
-    except io.UnsupportedOperation:
-        return hasattr(file, "isatty") and file.isatty()
+    pass
 
 
 def compile_or_validate_app(
@@ -346,25 +299,7 @@ def compile_or_validate_app(
     Returns:
         True if the app was successfully compiled or validated, False otherwise.
     """
-    try:
-        if compile:
-            get_compiled_app(
-                check_if_schema_up_to_date=check_if_schema_up_to_date,
-                prerender_routes=prerender_routes,
-            )
-        else:
-            get_and_validate_app(check_if_schema_up_to_date=check_if_schema_up_to_date)
-    except Exception as e:
-        import traceback
-
-        try:
-            colorize = _can_colorize()
-            traceback.print_exception(e, colorize=colorize)  # pyright: ignore[reportCallIssue]
-        except Exception:
-            traceback.print_exception(e)
-        return False
-    else:
-        return True
+    pass
 
 
 def get_redis() -> Redis | None:
@@ -648,16 +583,7 @@ def check_db_initialized() -> bool:
     Returns:
         True if alembic is initialized (or if database is not used).
     """
-    if (
-        get_config().db_url is not None
-        and not environment.ALEMBIC_CONFIG.get().exists()
-    ):
-        console.error(
-            "Database is not initialized. Run [bold]reflex db init[/bold] first.",
-            dedupe=True,
-        )
-        return False
-    return True
+    pass
 
 
 def check_schema_up_to_date():

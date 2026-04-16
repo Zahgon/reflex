@@ -48,25 +48,7 @@ def page(
     from reflex_base.config import get_config
 
     def decorator(render_fn: Callable):
-        kwargs = {}
-        if route:
-            kwargs["route"] = route
-        if title:
-            kwargs["title"] = title
-        if image:
-            kwargs["image"] = image
-        if description:
-            kwargs["description"] = description
-        if meta:
-            kwargs["meta"] = meta
-        if script_tags:
-            kwargs["script_tags"] = script_tags
-        if on_load:
-            kwargs["on_load"] = on_load
-
-        DECORATED_PAGES[get_config().app_name].append((render_fn, kwargs))
-
-        return render_fn
+        pass
 
     return decorator
 

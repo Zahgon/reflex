@@ -144,11 +144,7 @@ def route_specificity(keyworded_route: str) -> tuple[int, int, int]:
         A tuple containing the counts of double catchall segments,
         double segments, and single segments in the route.
     """
-    return (
-        keyworded_route.count(constants.RouteRegex.DOUBLE_CATCHALL_SEGMENT),
-        keyworded_route.count(constants.RouteRegex.DOUBLE_SEGMENT),
-        keyworded_route.count(constants.RouteRegex.SINGLE_SEGMENT),
-    )
+    pass
 
 
 def get_route_regex(keyworded_route: str) -> re.Pattern:
@@ -160,25 +156,7 @@ def get_route_regex(keyworded_route: str) -> re.Pattern:
     Returns:
         A compiled regex pattern for the route.
     """
-    if keyworded_route == "index":
-        return re.compile(re.escape("/"))
-    path_parts = keyworded_route.split("/")
-    regex_parts = []
-    for part in path_parts:
-        if part == constants.RouteRegex.SINGLE_SEGMENT:
-            # Match a single segment (/slug)
-            regex_parts.append(r"/[^/]*")
-        elif part == constants.RouteRegex.DOUBLE_SEGMENT:
-            # Match a single optional segment (/slug or nothing)
-            regex_parts.append(r"(/[^/]+)?")
-        elif part == constants.RouteRegex.DOUBLE_CATCHALL_SEGMENT:
-            regex_parts.append(".*")
-        else:
-            regex_parts.append(re.escape("/" + part))
-    # Join the regex parts and compile the regex
-    regex_pattern = "".join(regex_parts)
-    regex_pattern = f"^{regex_pattern}/?$"
-    return re.compile(regex_pattern)
+    pass
 
 
 def get_router(routes: list[str]) -> Callable[[str], str | None]:
@@ -191,36 +169,4 @@ def get_router(routes: list[str]) -> Callable[[str], str | None]:
         A function that takes a path and returns the first matching route,
         or None if no match is found.
     """
-    keyworded_routes = {
-        replace_brackets_with_keywords(route): route for route in routes
-    }
-    sorted_routes_by_specificity = sorted(
-        keyworded_routes.items(),
-        key=lambda item: route_specificity(item[0]),
-    )
-    regexed_routes = [
-        (get_route_regex(keyworded_route), original_route)
-        for keyworded_route, original_route in sorted_routes_by_specificity
-    ]
-
-    def get_route(path: str) -> str | None:
-        """Get the first matching route for a given path.
-
-        Args:
-            path: The path to match against the routes.
-
-        Returns:
-            The first matching route, or None if no match is found.
-        """
-        config = get_config()
-        if config.frontend_path:
-            path = path.removeprefix(config.frontend_path)
-        path = "/" + path.removeprefix("/").removesuffix("/")
-        if path == "/index":
-            path = "/"
-        for regex, original_route in regexed_routes:
-            if regex.fullmatch(path):
-                return original_route
-        return None
-
-    return get_route
+    pass

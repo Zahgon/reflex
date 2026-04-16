@@ -50,7 +50,7 @@ def _best_registry_file_path() -> Path:
     Returns:
         The file path for the best registry cache.
     """
-    return environment.REFLEX_DIR.get() / "reflex_best_registry.cached"
+    pass
 
 
 @cache_result_in_disk(cache_file_path=_best_registry_file_path)

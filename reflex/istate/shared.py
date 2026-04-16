@@ -24,12 +24,7 @@ def _log_update_client_errors(task: asyncio.Task):
     Args:
         task: The asyncio task to check for errors.
     """
-    try:
-        task.result()
-    except Exception as e:
-        console.warn(f"Error updating linked client: {e}")
-    finally:
-        UPDATE_OTHER_CLIENT_TASKS.discard(task)
+    pass
 
 
 def _do_update_other_tokens(
@@ -49,28 +44,7 @@ def _do_update_other_tokens(
     Returns:
         The list of asyncio tasks created to perform the updates.
     """
-    from reflex.utils.prerequisites import get_app
-
-    app = get_app().app
-
-    async def _update_client(token: str):
-        async with app.modify_state(
-            BaseStateToken(ident=token, cls=state_type),
-            previous_dirty_vars=previous_dirty_vars,
-        ):
-            pass
-
-    tasks = []
-    for affected_token in affected_tokens:
-        # Don't send updates for disconnected clients.
-        if affected_token not in app.event_namespace._token_manager.token_to_socket:
-            continue
-        # TODO: remove disconnected clients after some time.
-        t = asyncio.create_task(_update_client(affected_token))
-        UPDATE_OTHER_CLIENT_TASKS.add(t)
-        t.add_done_callback(_log_update_client_errors)
-        tasks.append(t)
-    return tasks
+    pass
 
 
 @contextlib.asynccontextmanager
@@ -137,12 +111,7 @@ class SharedStateBaseInternal(State):
 
         This is necessary for applying dirty vars from one event to other linked states.
         """
-        if (
-            previous_dirty_vars := getattr(self, "_previous_dirty_vars", None)
-        ) is not None:
-            previous_dirty_vars.clear()
-            previous_dirty_vars.update(self.dirty_vars)
-        super()._clean()
+        pass
 
     @_override_base_method
     def _mark_dirty(self):
@@ -189,28 +158,7 @@ class SharedStateBaseInternal(State):
         Raises:
             ReflexRuntimeError: If linking fails or token is invalid.
         """
-        if not token:
-            msg = "Cannot link shared state to empty token."
-            raise ReflexRuntimeError(msg)
-        if not isinstance(self, SharedState):
-            msg = "Can only link SharedState instances."
-            raise RuntimeError(msg)
-        if self._linked_to == token:
-            return self  # already linked to this token
-        if self._linked_to and self._linked_to != token:
-            # Disassociate from previous linked token since unlink will not be called.
-            self._linked_from.discard(self.router.session.client_token)
-        # TODO: Change StateManager to accept token + class instead of combining them in a string.
-        if "_" in token:
-            msg = f"Invalid token {token} for linking state {self.get_full_name()}, cannot use underscore (_) in the token name."
-            raise ReflexRuntimeError(msg)
-
-        # Associate substate with the given link token.
-        state_name = self.get_full_name()
-        if self._reflex_internal_links is None:
-            self._reflex_internal_links = {}
-        self._reflex_internal_links[state_name] = token
-        return await self._internal_patch_linked_state(token, full_delta=True)
+        pass
 
     async def _unlink(self):
         """Unlink this shared state from its linked token.
@@ -267,43 +215,7 @@ class SharedStateBaseInternal(State):
         Returns:
             The state that was linked into the tree.
         """
-        from reflex.istate.manager import get_state_manager
-
-        if self._exit_stack is None or self._held_locks is None:
-            msg = "Cannot link shared state outside of _modify_linked_states context."
-            raise ReflexRuntimeError(msg)
-
-        # Get the newly linked state and update pointers/delta for subsequent events.
-        if token not in self._held_locks:
-            linked_root_state = await self._exit_stack.enter_async_context(
-                get_state_manager().modify_state(
-                    BaseStateToken(ident=token, cls=type(self))
-                )
-            )
-            self._held_locks.setdefault(token, {})
-        else:
-            linked_root_state = await get_state_manager().get_state(
-                BaseStateToken(ident=token, cls=type(self))
-            )
-        linked_state = await linked_root_state.get_state(type(self))
-        if not isinstance(linked_state, SharedState):
-            msg = f"Linked state for token {token} is not a SharedState."
-            raise ReflexRuntimeError(msg)
-        # Avoid unnecessary dirtiness of shared state when there are no changes.
-        if type(self) not in self._held_locks[token]:
-            self._held_locks[token][type(self)] = linked_state
-        if self.router.session.client_token not in linked_state._linked_from:
-            linked_state._linked_from.add(self.router.session.client_token)
-        if linked_state._linked_to != token:
-            linked_state._linked_to = token
-        await self._exit_stack.enter_async_context(
-            _patch_state(
-                original_state=self,
-                linked_state=linked_state,
-                full_delta=full_delta,
-            )
-        )
-        return linked_state
+        pass
 
     def _held_locks_linked_states(self) -> list["SharedState"]:
         """Get all linked states currently held by this state.
@@ -311,14 +223,7 @@ class SharedStateBaseInternal(State):
         Returns:
             The list of linked states currently held.
         """
-        if self._held_locks is None:
-            return []
-        return [
-            linked_state
-            for linked_state_cls_to_instance in self._held_locks.values()
-            for linked_state in linked_state_cls_to_instance.values()
-            if isinstance(linked_state, SharedState)
-        ]
+        pass
 
     @contextlib.asynccontextmanager
     async def _modify_linked_states(
@@ -337,65 +242,7 @@ class SharedStateBaseInternal(State):
         Yields:
             None.
         """
-        if self._exit_stack is not None:
-            msg = "Cannot nest _modify_linked_states contexts."
-            raise ReflexRuntimeError(msg)
-        if self._reflex_internal_links is None:
-            msg = "No linked states to modify."
-            raise ReflexRuntimeError(msg)
-        self._exit_stack = contextlib.AsyncExitStack()
-        self._held_locks = {}
-        current_dirty_vars: dict[str, set[str]] = {}
-        affected_tokens: set[str] = set()
-        try:
-            # Go through all linked states and patch them in if they are present in the tree
-            for linked_state_name, linked_token in self._reflex_internal_links.items():
-                linked_state_cls: type[SharedState] = (
-                    self.get_root_state().get_class_substate(  # pyright: ignore[reportAssignmentType]
-                        linked_state_name
-                    )
-                )
-                try:
-                    original_state = self._get_state_from_cache(linked_state_cls)
-                except ValueError:
-                    # This state wasn't required for processing the event.
-                    continue
-                linked_state = await original_state._internal_patch_linked_state(
-                    linked_token
-                )
-                if (
-                    previous_dirty_vars
-                    and (dv := previous_dirty_vars.get(linked_state_name)) is not None
-                ):
-                    linked_state.dirty_vars.update(dv)
-                    linked_state._mark_dirty()
-            async with self._exit_stack:
-                yield None
-                # Collect dirty vars and other affected clients that need to be updated.
-                for linked_state in self._held_locks_linked_states():
-                    if linked_state._previous_dirty_vars is not None:
-                        current_dirty_vars[linked_state.get_full_name()] = set(
-                            linked_state._previous_dirty_vars
-                        )
-                    if (
-                        linked_state._get_was_touched()
-                        or linked_state._previous_dirty_vars is not None
-                    ):
-                        affected_tokens.update(
-                            token
-                            for token in linked_state._linked_from
-                            if token != self.router.session.client_token
-                        )
-        finally:
-            self._exit_stack = None
-
-        # Only propagate dirty vars when we are not already propagating from another state.
-        if previous_dirty_vars is None:
-            _do_update_other_tokens(
-                affected_tokens=affected_tokens,
-                previous_dirty_vars=current_dirty_vars,
-                state_type=type(self),
-            )
+        pass
 
 
 class SharedState(SharedStateBaseInternal, mixin=True):

@@ -40,26 +40,7 @@ def _wrap_https_func(
 
     @functools.wraps(func)
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
-        import httpx
-
-        url = args[0]
-        console.debug(f"Sending HTTPS request to {args[0]}")
-        initial_time = time.time()
-        try:
-            response = func(*args, **kwargs)
-        except httpx.ConnectError as err:
-            if "CERTIFICATE_VERIFY_FAILED" in str(err):
-                # If the error is a certificate verification error, recommend mitigating steps.
-                console.error(
-                    f"Certificate verification failed for {url}. Set environment variable SSL_CERT_FILE to the "
-                    "path of the certificate file or SSL_NO_VERIFY=1 to disable verification."
-                )
-            raise
-        else:
-            console.debug(
-                f"Received response from {url} in {time.time() - initial_time:.3f} seconds"
-            )
-            return response
+        pass
 
     return wrapper
 
@@ -79,11 +60,7 @@ def _wrap_https_lazy_func(
     f: Callable[_P, _T] | Unset = unset
 
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _T:
-        nonlocal f
-        if isinstance(f, Unset):
-            f = _wrap_https_func(func())
-            functools.update_wrapper(wrapper, f)
-        return f(*args, **kwargs)
+        pass
 
     return wrapper
 

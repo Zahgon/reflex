@@ -137,7 +137,7 @@ def default_frontend_exception_handler(exception: Exception) -> None:
         exception: The exception.
 
     """
-    console.error(f"[Reflex Frontend Exception]\n {exception}\n")
+    pass
 
 
 def default_backend_exception_handler(exception: Exception) -> EventSpec:
@@ -150,29 +150,7 @@ def default_backend_exception_handler(exception: Exception) -> EventSpec:
         EventSpec: The window alert event.
 
     """
-    from reflex_components_sonner.toast import toast
-
-    error = traceback.format_exception(
-        type(exception), exception, exception.__traceback__
-    )
-
-    console.error(f"[Reflex Backend Exception]\n {''.join(error)}\n")
-
-    error_message = (
-        ["Contact the website administrator."]
-        if is_prod_mode()
-        else [f"{type(exception).__name__}: {exception}", "See logs for details."]
-    )
-
-    return toast(
-        "An error occurred.",
-        level="error",
-        fallback_to_alert=True,
-        description="\n".join(error_message),
-        position="top-center",
-        id="backend_error",
-        style={"width": "500px", "white-space": "pre-wrap"},
-    )
+    pass
 
 
 def extra_overlay_function() -> Component | None:
@@ -212,16 +190,7 @@ def default_overlay_component() -> Component:
     from reflex_base.components.component import memo
 
     def default_overlay_components():
-        return Fragment.create(
-            connection_pulser(),
-            connection_toaster(),
-            *(
-                [backend_disabled()]
-                if get_compile_context() == constants.CompileContext.DEPLOY
-                else []
-            ),
-            *codespaces.codespaces_auto_redirect(),
-        )
+        pass
 
     return Fragment.create(memo(default_overlay_components)())
 
@@ -424,7 +393,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Returns:
             The event namespace.
         """
-        return self._event_namespace
+        pass
 
     @property
     def event_processor(self) -> EventProcessor:
@@ -433,10 +402,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Raises:
             RuntimeError: If the event processor is not initialized.
         """
-        if self._event_processor is None:
-            msg = "Event processor is not initialized."
-            raise RuntimeError(msg)
-        return self._event_processor
+        pass
 
     def __post_init__(self):
         """Initialize the app.
@@ -482,9 +448,7 @@ class App(MiddlewareMixin, LifespanMixin):
 
     def _enable_state(self) -> None:
         """Enable state for the app."""
-        if not self._state:
-            self._state = State
-        self._setup_state()
+        pass
 
     def _setup_state(self) -> None:
         """Set up the state for the app.
@@ -492,87 +456,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Raises:
             RuntimeError: If the socket server is invalid.
         """
-        if not self._state:
-            return
-
-        config = get_config()
-
-        # Set up the state manager.
-        self._state_manager = StateManager.create()
-
-        # Set up the Socket.IO AsyncServer.
-        if not self.sio:
-            self.sio = AsyncServer(
-                async_mode="asgi",
-                cors_allowed_origins=(
-                    (
-                        "*"
-                        if config.cors_allowed_origins == ("*",)
-                        else list(config.cors_allowed_origins)
-                    )
-                    if config.transport == "websocket"
-                    else []
-                ),
-                cors_credentials=config.transport == "websocket",
-                max_http_buffer_size=environment.REFLEX_SOCKET_MAX_HTTP_BUFFER_SIZE.get(),
-                ping_interval=environment.REFLEX_SOCKET_INTERVAL.get(),
-                ping_timeout=environment.REFLEX_SOCKET_TIMEOUT.get(),
-                json=SimpleNamespace(
-                    dumps=staticmethod(format.json_dumps),
-                    loads=staticmethod(json.loads),
-                ),
-                allow_upgrades=False,
-                transports=[config.transport],
-            )
-        elif getattr(self.sio, "async_mode", "") != "asgi":
-            msg = f"Custom `sio` must use `async_mode='asgi'`, not '{self.sio.async_mode}'."
-            raise RuntimeError(msg)
-
-        # Create the socket app. Note event endpoint constant replaces the default 'socket.io' path.
-        socket_app = EngineIOApp(self.sio, socketio_path="")
-        namespace = config.get_event_namespace()
-
-        # Create the event namespace and attach the main app. Not related to any paths.
-        self._event_namespace = EventNamespace(namespace, self)
-
-        # Register the event namespace with the socket.
-        self.sio.register_namespace(self.event_namespace)
-        # Mount the socket app with the API.
-        if self._api:
-
-            class HeaderMiddleware:
-                def __init__(self, app: ASGIApp):
-                    self.app = app
-
-                async def __call__(self, scope: Scope, receive: Receive, send: Send):
-                    original_send = send
-
-                    async def modified_send(message: Message):
-                        if message["type"] == "websocket.accept":
-                            if scope.get("subprotocols"):
-                                # The following *does* say "subprotocol" instead of "subprotocols", intentionally.
-                                message["subprotocol"] = scope["subprotocols"][0]
-
-                            headers = dict(message.get("headers", []))
-                            header_key = b"sec-websocket-protocol"
-                            if subprotocol := headers.get(header_key):
-                                message["headers"] = [
-                                    *message.get("headers", []),
-                                    (header_key, subprotocol),
-                                ]
-
-                        return await original_send(message)
-
-                    return await self.app(scope, receive, modified_send)
-
-            socket_app_with_headers = HeaderMiddleware(socket_app)
-            self._api.mount(str(constants.Endpoint.EVENT), socket_app_with_headers)
-
-        # Check the exception handlers
-        self._validate_exception_handlers()
-
-        # Ensure the event processor starts and stops with the server.
-        self.register_lifespan_task(self._setup_event_processor)
+        pass
 
     def _registration_context_middleware(self, app: ASGIApp) -> ASGIApp:
         """Ensure the RegistrationContext is attached to the ASGI app.
@@ -583,27 +467,12 @@ class App(MiddlewareMixin, LifespanMixin):
         Returns:
             The ASGI app with the middleware attached.
         """
-
-        async def registration_context_middleware(
-            scope: Scope, receive: Receive, send: Send
-        ):
-            if self._registration_context is not None:
-                RegistrationContext.set(self._registration_context)
-            await app(scope, receive, send)
-
-        return registration_context_middleware
+        pass
 
     @contextlib.asynccontextmanager
     async def _setup_event_processor(self) -> AsyncIterator[None]:
         # Create the event processor.
-        self._event_processor = BaseStateEventProcessor(
-            middleware=self, backend_exception_handler=self.backend_exception_handler
-        )
-        async with self._event_processor.configure(
-            state_manager=self.state_manager,
-            event_namespace=self.event_namespace,
-        ):
-            yield
+        pass
 
     def __repr__(self) -> str:
         """Get the string representation of the app.
@@ -679,20 +548,7 @@ class App(MiddlewareMixin, LifespanMixin):
 
     def _add_default_endpoints(self):
         """Add default api endpoints (ping)."""
-        # To test the server.
-        if not self._api:
-            return
-
-        self._api.add_route(
-            str(constants.Endpoint.PING),
-            ping,
-            methods=["GET"],
-        )
-        self._api.add_route(
-            str(constants.Endpoint.HEALTH),
-            health,
-            methods=["GET"],
-        )
+        pass
 
     def _add_optional_endpoints(self):
         """Add optional api endpoints (_upload)."""
@@ -736,13 +592,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Args:
             api: The Starlette app to add CORS middleware to.
         """
-        api.add_middleware(
-            cors.CORSMiddleware,
-            allow_credentials=True,
-            allow_methods=["*"],
-            allow_headers=["*"],
-            allow_origins=get_config().cors_allowed_origins,
-        )
+        pass
 
     @property
     def state_manager(self) -> StateManager:
@@ -754,10 +604,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Raises:
             ValueError: if the state has not been initialized.
         """
-        if self._state_manager is None:
-            msg = "The state manager has not been initialized."
-            raise ValueError(msg)
-        return self._state_manager
+        pass
 
     @staticmethod
     def _generate_component(component: Component | ComponentCallable) -> Component:
@@ -904,9 +751,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Returns:
             The route computer function.
         """
-        from reflex.route import get_router
-
-        return get_router(list(dict.fromkeys([*self._unevaluated_pages, *self._pages])))
+        pass
 
     def get_load_events(self, path: str) -> list[IndividualEventType[()]]:
         """Get the load events for a route.
@@ -917,15 +762,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Returns:
             The load events for the route.
         """
-        four_oh_four_load_events = self._load_events.get("404", [])
-        route = self.router(path)
-        if not route:
-            # If the path is not a valid route, return the 404 page load events.
-            return four_oh_four_load_events
-        return self._load_events.get(
-            route,
-            four_oh_four_load_events,
-        )
+        pass
 
     def _check_routes_conflict(self, new_route: str):
         """Verify if there is any conflict between the new route and any existing route.
@@ -969,33 +806,7 @@ class App(MiddlewareMixin, LifespanMixin):
 
     def _setup_admin_dash(self):
         """Setup the admin dash."""
-        try:
-            from starlette_admin.contrib.sqla.admin import Admin
-            from starlette_admin.contrib.sqla.view import ModelView
-
-            from reflex.model import Model
-        except ImportError:
-            return
-
-        # Get the admin dash.
-        if not self._api:
-            return
-
-        admin_dash = self.admin_dash
-
-        if admin_dash and admin_dash.models:
-            # Build the admin dashboard
-            admin = admin_dash.admin or Admin(
-                engine=Model.get_db_engine(),
-                title="Reflex Admin Dashboard",
-                logo_url="https://reflex.dev/Reflex.svg",
-            )
-
-            for model in admin_dash.models:
-                view = admin_dash.view_overrides.get(model, ModelView)
-                admin.add_view(view(model))
-
-            admin.mount_to(self._api)
+        pass
 
     def _get_frontend_packages(self, imports: dict[str, set[ImportVar]]):
         """Gets the frontend packages to be installed and filters out the unnecessary ones.
@@ -1074,12 +885,7 @@ class App(MiddlewareMixin, LifespanMixin):
     def _add_overlay_to_component(
         self, component: Component, overlay_component: Component
     ) -> Component:
-        children = component.children
-
-        if children[0] == overlay_component:
-            return component
-
-        return Fragment.create(overlay_component, *children)
+        pass
 
     def _setup_sticky_badge(self):
         """Add the sticky badge to the app."""
@@ -1425,8 +1231,7 @@ class App(MiddlewareMixin, LifespanMixin):
                 *args: P.args,
                 **kwargs: P.kwargs,
             ):
-                f = executor.submit(fn, *args, **kwargs)
-                result_futures.append(f)
+                pass
 
             for plugin in config.plugins:
                 plugin.pre_compile(
@@ -1556,7 +1361,7 @@ class App(MiddlewareMixin, LifespanMixin):
             return
 
         def all_routes(_request: Request) -> Response:
-            return JSONResponse(list(self._unevaluated_pages.keys()))
+            pass
 
         self._api.add_route(
             str(constants.Endpoint.ALL_ROUTES), all_routes, methods=["GET"]
@@ -1600,27 +1405,7 @@ class App(MiddlewareMixin, LifespanMixin):
         Raises:
             RuntimeError: If the app has not been initialized yet.
         """
-        if self.event_namespace is None:
-            msg = "App has not been initialized yet."
-            raise RuntimeError(msg)
-
-        if isinstance(token, str):
-            token = BaseStateToken.from_legacy_token(token, root_state=self._state)
-
-        # Get exclusive access to the state.
-        async with self.state_manager.modify_state_with_links(
-            token, previous_dirty_vars=previous_dirty_vars, **context
-        ) as state:
-            # No other event handler can modify the state while in this context.
-            yield state
-            delta = await state._get_resolved_delta()
-            state._clean()
-            if delta:
-                # When the frontend vars are modified emit the delta to the frontend.
-                await self.event_namespace.emit_update(
-                    update=StateUpdate(delta=delta),
-                    token=token.ident,
-                )
+        pass
 
     def _validate_exception_handlers(self):
         """Validate the custom event exception handlers for front- and backend.
@@ -1629,90 +1414,7 @@ class App(MiddlewareMixin, LifespanMixin):
             ValueError: If the custom exception handlers are invalid.
 
         """
-        frontend_arg_spec = {
-            "exception": Exception,
-        }
-
-        backend_arg_spec = {
-            "exception": Exception,
-        }
-
-        for handler_domain, handler_fn, handler_spec in zip(
-            ["frontend", "backend"],
-            [self.frontend_exception_handler, self.backend_exception_handler],
-            [
-                frontend_arg_spec,
-                backend_arg_spec,
-            ],
-            strict=True,
-        ):
-            if hasattr(handler_fn, "__name__"):
-                fn_name_ = handler_fn.__name__
-            else:
-                fn_name_ = type(handler_fn).__name__
-
-            if isinstance(handler_fn, functools.partial):
-                msg = f"Provided custom {handler_domain} exception handler `{fn_name_}` is a partial function. Please provide a named function instead."
-                raise ValueError(msg)
-
-            if not callable(handler_fn):
-                msg = f"Provided custom {handler_domain} exception handler `{fn_name_}` is not a function."
-                raise ValueError(msg)
-
-            # Allow named functions only as lambda functions cannot be introspected
-            if fn_name_ == "<lambda>":
-                msg = f"Provided custom {handler_domain} exception handler `{fn_name_}` is a lambda function. Please use a named function instead."
-                raise ValueError(msg)
-
-            # Check if the function has the necessary annotations and types in the right order
-            argspec = inspect.getfullargspec(handler_fn)
-            arg_annotations = {
-                k: eval(v) if isinstance(v, str) else v
-                for k, v in argspec.annotations.items()
-                if k not in ["args", "kwargs", "return"]
-            }
-
-            for required_arg_index, required_arg in enumerate(handler_spec):
-                if required_arg not in arg_annotations:
-                    msg = f"Provided custom {handler_domain} exception handler `{fn_name_}` does not take the required argument `{required_arg}`"
-                    raise ValueError(msg)
-                if list(arg_annotations.keys())[required_arg_index] != required_arg:
-                    msg = (
-                        f"Provided custom {handler_domain} exception handler `{fn_name_}` has the wrong argument order."
-                        f"Expected `{required_arg}` as the {required_arg_index + 1} argument but got `{list(arg_annotations.keys())[required_arg_index]}`"
-                    )
-                    raise ValueError(msg)
-
-                if not issubclass(arg_annotations[required_arg], Exception):
-                    msg = (
-                        f"Provided custom {handler_domain} exception handler `{fn_name_}` has the wrong type for {required_arg} argument."
-                        f"Expected to be `Exception` but got `{arg_annotations[required_arg]}`"
-                    )
-                    raise ValueError(msg)
-
-            # Check if the return type is valid for backend exception handler
-            if handler_domain == "backend":
-                sig = inspect.signature(self.backend_exception_handler)
-                return_type = (
-                    eval(sig.return_annotation)
-                    if isinstance(sig.return_annotation, str)
-                    else sig.return_annotation
-                )
-
-                valid = bool(
-                    return_type == EventSpec
-                    or return_type == EventSpec | None
-                    or return_type == list[EventSpec]
-                    or return_type == inspect.Signature.empty
-                    or return_type is None
-                )
-
-                if not valid:
-                    msg = (
-                        f"Provided custom {handler_domain} exception handler `{fn_name_}` has the wrong return type."
-                        f"Expected `EventSpec | list[EventSpec] | None` but got `{return_type}`"
-                    )
-                    raise ValueError(msg)
+        pass
 
 
 def ping(_request: Request) -> Response:
@@ -1794,8 +1496,7 @@ class EventNamespace(AsyncNamespace):
         Returns:
             The token to SID mapping.
         """
-        # For backward compatibility, expose the underlying dict
-        return self._token_manager.token_to_sid
+        pass
 
     @property
     def sid_to_token(self) -> dict[str, str]:
@@ -1804,8 +1505,7 @@ class EventNamespace(AsyncNamespace):
         Returns:
             The SID to token mapping dict.
         """
-        # For backward compatibility, expose the underlying dict
-        return self._token_manager.sid_to_token
+        pass
 
     async def on_connect(self, sid: str, environ: dict):
         """Event for when the websocket is connected.
@@ -1814,21 +1514,7 @@ class EventNamespace(AsyncNamespace):
             sid: The Socket.IO session id.
             environ: The request information, including HTTP headers.
         """
-        if isinstance(self._token_manager, RedisTokenManager):
-            # Make sure this instance is watching for updates from other instances.
-            self._token_manager.ensure_lost_and_found_task(self.emit_update)
-        query_params = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
-        token_list = query_params.get("token", [])
-        if token_list:
-            await self.link_token_to_sid(sid, token_list[0])
-        else:
-            console.warn(f"No token provided in connection for session {sid}")
-
-        subprotocol = environ.get("HTTP_SEC_WEBSOCKET_PROTOCOL")
-        if subprotocol and subprotocol != constants.Reflex.VERSION:
-            console.warn(
-                f"Frontend version {subprotocol} for session {sid} does not match the backend version {constants.Reflex.VERSION}."
-            )
+        pass
 
     def on_disconnect(self, sid: str) -> asyncio.Task | None:
         """Event for when the websocket disconnects.
@@ -1839,23 +1525,7 @@ class EventNamespace(AsyncNamespace):
         Returns:
             An asyncio Task for cleaning up the token, or None.
         """
-        # Get token before cleaning up
-        disconnect_token = self.sid_to_token.get(sid)
-        if disconnect_token:
-            # Use async cleanup through token manager
-            task = asyncio.create_task(
-                self._token_manager.disconnect_token(disconnect_token, sid),
-                name=f"reflex_disconnect_token|{disconnect_token}|{time.time()}",
-            )
-            # Don't await to avoid blocking disconnect, but handle potential errors
-            task.add_done_callback(
-                lambda t: (
-                    t.exception()
-                    and console.error(f"Token cleanup error: {t.exception()}")
-                )
-            )
-            return task
-        return None
+        pass
 
     async def emit_update(self, update: StateUpdate, token: str) -> None:
         """Emit an update to the client.
@@ -1864,29 +1534,7 @@ class EventNamespace(AsyncNamespace):
             update: The state update to send.
             token: The client token (tab) associated with the event.
         """
-        socket_record = self._token_manager.token_to_socket.get(token)
-        if (
-            socket_record is None
-            or socket_record.instance_id != self._token_manager.instance_id
-        ):
-            if isinstance(self._token_manager, RedisTokenManager):
-                # The socket belongs to another instance of the app, send it to the lost and found.
-                if not await self._token_manager.emit_lost_and_found(token, update):
-                    console.warn(
-                        f"Failed to send delta to lost and found for client {token!r}"
-                    )
-            else:
-                # If the socket record is None, we are not connected to a client. Prevent sending
-                # updates to all clients.
-                console.warn(
-                    f"Attempting to send delta to disconnected client {token!r}"
-                )
-            return
-        # Creating a task prevents the update from being blocked behind other coroutines.
-        await asyncio.create_task(
-            self.emit(str(constants.SocketEvent.EVENT), update, to=socket_record.sid),
-            name=f"reflex_emit_event|{token}|{socket_record.sid}|{time.time()}",
-        )
+        pass
 
     async def on_event(self, sid: str, data: Any):
         """Event for receiving front-end websocket events.
@@ -1899,83 +1547,7 @@ class EventNamespace(AsyncNamespace):
             RuntimeError: If the Socket.IO is badly initialized.
             EventDeserializationError: If the event data is not a dictionary.
         """
-        # Determine the token for this SID
-        if (token := self.sid_to_token.get(sid)) is None:
-            console.warn(
-                f"Received event from session {sid} with no associated token. This may indicate a bug. Event data: {data}"
-            )
-            return
-
-        fields = data
-
-        if isinstance(fields, str):
-            console.warn(
-                "Received event data as a string. This generally should not happen and may indicate a bug."
-                f" Event data: {fields}"
-            )
-            try:
-                fields = json.loads(fields)
-            except json.JSONDecodeError as ex:
-                msg = f"Failed to deserialize event data: {fields}."
-                raise exceptions.EventDeserializationError(msg) from ex
-
-        if not isinstance(fields, dict):
-            msg = f"Event data must be a dictionary, but received {fields} of type {type(fields)}."
-            raise exceptions.EventDeserializationError(msg)
-
-        try:
-            # Get the event.
-            event = Event(**{k: v for k, v in fields.items() if k in _EVENT_FIELDS})
-        except (TypeError, ValueError) as ex:
-            msg = f"Failed to deserialize event data: {fields}."
-            raise exceptions.EventDeserializationError(msg) from ex
-
-        # Get the event environment.
-        if self.app.sio is None:
-            msg = "Socket.IO is not initialized."
-            raise RuntimeError(msg)
-        environ = self.app.sio.get_environ(sid, self.namespace)
-        if environ is None:
-            msg = "Socket.IO environ is not initialized."
-            raise RuntimeError(msg)
-
-        # Get the client headers.
-        headers = {
-            k.decode("utf-8"): v.decode("utf-8")
-            for (k, v) in environ["asgi.scope"]["headers"]
-        }
-
-        # Get the client IP
-        try:
-            client_ip = environ["asgi.scope"]["client"][0]
-            headers["asgi-scope-client"] = client_ip
-        except (KeyError, IndexError):
-            client_ip = environ.get("REMOTE_ADDR", "0.0.0.0")
-
-        # Unroll reverse proxy forwarded headers.
-        client_ip = (
-            headers
-            .get(
-                "x-forwarded-for",
-                client_ip,
-            )
-            .partition(",")[0]
-            .strip()
-        )
-        router_data = event.router_data
-        router_data.update({
-            constants.RouteVar.QUERY: format.format_query_params(event.router_data),
-            constants.RouteVar.CLIENT_TOKEN: token,
-            constants.RouteVar.SESSION_ID: sid,
-            constants.RouteVar.HEADERS: headers,
-            constants.RouteVar.CLIENT_IP: client_ip,
-        })
-        router_data[constants.RouteVar.PATH] = "/" + (
-            self.app.router(path) or "404"
-            if (path := router_data.get(constants.RouteVar.PATH))
-            else "404"
-        ).removeprefix("/")
-        await self.app.event_processor.enqueue(token, event)
+        pass
 
     async def on_ping(self, sid: str):
         """Event for testing the API endpoint.
@@ -1983,8 +1555,7 @@ class EventNamespace(AsyncNamespace):
         Args:
             sid: The Socket.IO session id.
         """
-        # Emit the test event.
-        await self.emit(str(constants.SocketEvent.PING), "pong", to=sid)
+        pass
 
     async def link_token_to_sid(self, sid: str, token: str):
         """Link a token to a session id.
@@ -1993,17 +1564,4 @@ class EventNamespace(AsyncNamespace):
             sid: The Socket.IO session id.
             token: The client token.
         """
-        # Use TokenManager for duplicate detection and Redis support
-        new_token = await self._token_manager.link_token_to_sid(token, sid)
-
-        if new_token:
-            # Duplicate detected, emit new token to client
-            await self.emit("new_token", new_token, to=sid)
-
-        # Update client state to apply new sid/token for running background tasks.
-        if self.app._state is not None:
-            async with self.app.state_manager.modify_state(
-                BaseStateToken(ident=new_token or token, cls=self.app._state)
-            ) as state:
-                state.router_data[constants.RouteVar.SESSION_ID] = sid
-                state.router = RouterData.from_router_data(state.router_data)
+        pass

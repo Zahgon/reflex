@@ -82,38 +82,7 @@ class ExperimentalMemoComponent(Component):
         Args:
             **kwargs: The kwargs to pass to the component.
         """
-        definition = kwargs.pop("memo_definition")
-
-        explicit_props = {
-            param.name
-            for param in definition.params
-            if not param.is_children and not param.is_rest
-        }
-        component_fields = self.get_fields()
-
-        declared_props = {
-            key: kwargs.pop(key) for key in list(kwargs) if key in explicit_props
-        }
-
-        rest_props = {}
-        if _get_rest_param(definition.params) is not None:
-            rest_props = {
-                key: kwargs.pop(key)
-                for key in list(kwargs)
-                if key not in component_fields and not SpecialAttributes.is_special(key)
-            }
-
-        super()._post_init(**kwargs)
-
-        props: dict[str, Any] = {}
-        for key, value in {**declared_props, **rest_props}.items():
-            camel_cased_key = format.to_camel_case(key)
-            literal_value = LiteralVar.create(value)
-            props[camel_cased_key] = literal_value
-            setattr(self, camel_cased_key, literal_value)
-
-        prop_names = tuple(props)
-        object.__setattr__(self, "get_props", lambda: prop_names)
+        pass
 
 
 @cache
@@ -128,14 +97,7 @@ def _get_experimental_memo_component_class(
     Returns:
         A cached component subclass with the tag set at class definition time.
     """
-    return type(
-        f"ExperimentalMemoComponent_{export_name}",
-        (ExperimentalMemoComponent,),
-        {
-            "__module__": __name__,
-            "tag": export_name,
-        },
-    )
+    pass
 
 
 EXPERIMENTAL_MEMOS: dict[str, ExperimentalMemoDefinition] = {}
@@ -314,16 +276,7 @@ def _component_import_var(name: str) -> Var:
     Returns:
         The component var.
     """
-    return Var(
-        name,
-        _var_type=type[Component],
-        _var_data=VarData(
-            imports={
-                f"$/{constants.Dirs.COMPONENTS_PATH}": [ImportVar(tag=name)],
-                "@emotion/react": [ImportVar(tag="jsx")],
-            }
-        ),
-    )
+    pass
 
 
 def _validate_var_return_expr(return_expr: Var, func_name: str) -> None:
@@ -829,7 +782,7 @@ class _ExperimentalMemoFunctionWrapper:
         Returns:
             The imported function var.
         """
-        return self._imported_var
+        pass
 
 
 class _ExperimentalMemoComponentWrapper:
@@ -919,7 +872,7 @@ class _ExperimentalMemoComponentWrapper:
         Returns:
             The imported component var.
         """
-        return _component_import_var(self._definition.export_name)
+        pass
 
 
 def _create_function_wrapper(

@@ -44,7 +44,7 @@ class StateToken(Generic[TOKEN_TYPE]):
         Returns:
             A string key combining ident and class path.
         """
-        return str(self)
+        pass
 
     @property
     def lock_key(self) -> str:
@@ -53,7 +53,7 @@ class StateToken(Generic[TOKEN_TYPE]):
         Returns:
             The token ident.
         """
-        return self.ident
+        pass
 
     def __str__(self) -> str:
         """The key used in the underlying StateManager store.
@@ -117,8 +117,7 @@ class StateToken(Generic[TOKEN_TYPE]):
         Returns:
             The touched state of the state.
         """
-        # Default implementation is always to write the state.
-        return True
+        pass
 
 
 class BaseStateToken(StateToken["BaseState"]):
@@ -137,7 +136,7 @@ class BaseStateToken(StateToken["BaseState"]):
         Returns:
             The token ident.
         """
-        return self.ident
+        pass
 
     def with_cls(self, cls: type[BaseState]) -> Self:
         """Return a new token with the cls field updated to the provided class.
@@ -202,9 +201,7 @@ class BaseStateToken(StateToken["BaseState"]):
         Returns:
             The touched state of the BaseState.
         """
-        was_touched = state._get_was_touched()
-        state._was_touched = False  # Reset the touched flag after serializing.
-        return was_touched
+        pass
 
     @classmethod
     def from_legacy_token(

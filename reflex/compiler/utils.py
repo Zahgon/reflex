@@ -627,11 +627,7 @@ def get_root_stylesheet_path() -> str:
     Returns:
         The path of the app root file.
     """
-    return str(
-        get_web_dir()
-        / constants.Dirs.STYLES
-        / (constants.PageNames.STYLESHEET_ROOT + constants.Ext.CSS)
-    )
+    pass
 
 
 def get_context_path() -> str:
@@ -762,5 +758,4 @@ def is_valid_url(url: str) -> bool:
     Returns:
         Whether url is valid.
     """
-    result = urlparse(url)
-    return all([result.scheme, result.netloc])
+    pass

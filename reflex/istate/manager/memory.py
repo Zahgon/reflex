@@ -114,13 +114,7 @@ class StateManagerMemory(StateManager):
         Returns:
             The lock protecting the token's state.
         """
-        state_lock = self._states_locks.get(token.lock_key)
-        if state_lock is None:
-            async with self._state_manager_lock:
-                state_lock = self._states_locks.get(token.lock_key)
-                if state_lock is None:
-                    state_lock = self._states_locks[token.lock_key] = asyncio.Lock()
-        return state_lock
+        pass
 
     async def _expire_states(self):
         """Purge expired states until there are no unlocked deadlines left."""
@@ -171,9 +165,7 @@ class StateManagerMemory(StateManager):
             state: The state to set.
             context: The state modification context.
         """
-        token = self._coerce_token(token)
-        self.states[token.cache_key] = state
-        self._track_token(token)
+        pass
 
     @override
     @contextlib.asynccontextmanager
@@ -189,23 +181,7 @@ class StateManagerMemory(StateManager):
         Yields:
             The state for the token.
         """
-        token = self._coerce_token(token)
-        state_lock = await self._get_state_lock(token)
-
-        try:
-            async with state_lock:
-                state = self._get_or_create_state(token)
-                self._track_token(token)
-                try:
-                    yield state
-                finally:
-                    # Treat modify_state like a read followed by a write so the
-                    # expiration window starts after the state is no longer busy.
-                    self._track_token(token)
-        finally:
-            # Re-run expiration after the lock is released in case only locked
-            # tokens were being tracked when the worker last ran.
-            self._ensure_expiration_task()
+        pass
 
     async def close(self):
         """Cancel the in-memory expiration task."""

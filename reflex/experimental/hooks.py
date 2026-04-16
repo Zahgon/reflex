@@ -8,7 +8,7 @@ from reflex_base.vars.base import Var
 
 
 def _compose_react_imports(tags: list[str]) -> dict[str, list[ImportVar]]:
-    return {"react": [ImportVar(tag=tag) for tag in tags]}
+    pass
 
 
 def const(name: str | list[str], value: str | Var) -> Var:
@@ -21,9 +21,7 @@ def const(name: str | list[str], value: str | Var) -> Var:
     Returns:
         The constant Var.
     """
-    if isinstance(name, list):
-        return Var(_js_expr=f"const [{', '.join(name)}] = {value}")
-    return Var(_js_expr=f"const {name} = {value}")
+    pass
 
 
 def useCallback(func: str, deps: list) -> Var:  # noqa: N802
@@ -36,10 +34,7 @@ def useCallback(func: str, deps: list) -> Var:  # noqa: N802
     Returns:
         The useCallback hook.
     """
-    return Var(
-        _js_expr=f"useCallback({func}, {deps})" if deps else f"useCallback({func})",
-        _var_data=VarData(imports=_compose_react_imports(["useCallback"])),
-    )
+    pass
 
 
 def useContext(context: str) -> Var:  # noqa: N802
@@ -51,10 +46,7 @@ def useContext(context: str) -> Var:  # noqa: N802
     Returns:
         The useContext hook.
     """
-    return Var(
-        _js_expr=f"useContext({context})",
-        _var_data=VarData(imports=_compose_react_imports(["useContext"])),
-    )
+    pass
 
 
 def useRef(default: str) -> Var:  # noqa: N802
@@ -66,10 +58,7 @@ def useRef(default: str) -> Var:  # noqa: N802
     Returns:
         The useRef hook.
     """
-    return Var(
-        _js_expr=f"useRef({default})",
-        _var_data=VarData(imports=_compose_react_imports(["useRef"])),
-    )
+    pass
 
 
 def useState(var_name: str, default: str | None = None) -> Var:  # noqa: N802
@@ -82,10 +71,4 @@ def useState(var_name: str, default: str | None = None) -> Var:  # noqa: N802
     Returns:
         A useState hook.
     """
-    return const(
-        [var_name, f"set{var_name.capitalize()}"],
-        Var(
-            _js_expr=f"useState({default})",
-            _var_data=VarData(imports=_compose_react_imports(["useState"])),
-        ),
-    )
+    pass

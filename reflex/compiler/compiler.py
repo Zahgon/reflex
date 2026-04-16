@@ -186,11 +186,7 @@ def compile_root_stylesheet(
     Returns:
         The path and code of the compiled root stylesheet.
     """
-    output_path = utils.get_root_stylesheet_path()
-
-    code = _compile_root_stylesheet(stylesheets, reset_style)
-
-    return output_path, code
+    pass
 
 
 def _validate_stylesheet(stylesheet_full_path: Path, assets_app_path: Path) -> None:
@@ -204,28 +200,7 @@ def _validate_stylesheet(stylesheet_full_path: Path, assets_app_path: Path) -> N
         ValueError: If the stylesheet is not supported.
         FileNotFoundError: If the stylesheet is not found.
     """
-    suffix = stylesheet_full_path.suffix[1:] if stylesheet_full_path.suffix else ""
-    if suffix not in constants.Reflex.STYLESHEETS_SUPPORTED:
-        msg = f"Stylesheet file {stylesheet_full_path} is not supported."
-        raise ValueError(msg)
-    if not stylesheet_full_path.absolute().is_relative_to(assets_app_path.absolute()):
-        msg = f"Cannot include stylesheets from outside the assets directory: {stylesheet_full_path}"
-        raise FileNotFoundError(msg)
-    if not stylesheet_full_path.name:
-        msg = f"Stylesheet file name cannot be empty: {stylesheet_full_path}"
-        raise ValueError(msg)
-    if (
-        len(
-            stylesheet_full_path
-            .absolute()
-            .relative_to(assets_app_path.absolute())
-            .parts
-        )
-        == 1
-        and stylesheet_full_path.stem == PageNames.STYLESHEET_ROOT
-    ):
-        msg = f"Stylesheet file name cannot be '{PageNames.STYLESHEET_ROOT}': {stylesheet_full_path}"
-        raise ValueError(msg)
+    pass
 
 
 RADIX_THEMES_STYLESHEET = "@radix-ui/themes/styles.css"
@@ -244,91 +219,7 @@ def _compile_root_stylesheet(stylesheets: list[str], reset_style: bool = True) -
     Raises:
         FileNotFoundError: If a specified stylesheet in assets directory does not exist.
     """
-    # Add stylesheets from plugins.
-    sheets = []
-
-    # Add CSS reset if enabled
-    if reset_style:
-        # Reference the vendored style reset file (automatically copied from .templates/web)
-        sheets.append(f"./{ResetStylesheet.FILENAME}")
-
-    sheets.extend(
-        [RADIX_THEMES_STYLESHEET]
-        + [
-            sheet
-            for plugin in get_config().plugins
-            for sheet in plugin.get_stylesheet_paths()
-        ]
-    )
-
-    failed_to_import_sass = False
-    assets_app_path = Path.cwd() / constants.Dirs.APP_ASSETS
-
-    stylesheets_files: list[Path] = []
-    stylesheets_urls = []
-
-    for stylesheet in stylesheets:
-        if not utils.is_valid_url(stylesheet):
-            # check if stylesheet provided exists.
-            stylesheet_full_path = assets_app_path / stylesheet.strip("/")
-
-            if not stylesheet_full_path.exists():
-                msg = f"The stylesheet file {stylesheet_full_path} does not exist."
-                raise FileNotFoundError(msg)
-
-            if stylesheet_full_path.is_dir():
-                all_files = (
-                    file
-                    for ext in constants.Reflex.STYLESHEETS_SUPPORTED
-                    for file in stylesheet_full_path.rglob("*." + ext)
-                )
-                for file in all_files:
-                    if file.is_dir():
-                        continue
-                    # Validate the stylesheet.
-                    _validate_stylesheet(file, assets_app_path)
-                    stylesheets_files.append(file)
-
-            else:
-                # Validate the stylesheet.
-                _validate_stylesheet(stylesheet_full_path, assets_app_path)
-                stylesheets_files.append(stylesheet_full_path)
-        else:
-            stylesheets_urls.append(stylesheet)
-
-    sheets.extend(dict.fromkeys(stylesheets_urls))
-
-    for stylesheet in stylesheets_files:
-        target_path = stylesheet.relative_to(assets_app_path).with_suffix(".css")
-        target = get_web_dir() / constants.Dirs.STYLES / target_path
-
-        target.parent.mkdir(parents=True, exist_ok=True)
-
-        if stylesheet.suffix == ".css":
-            path_ops.cp(src=stylesheet, dest=target, overwrite=True)
-        else:
-            try:
-                from sass import compile as sass_compile
-
-                target.write_text(
-                    data=sass_compile(
-                        filename=str(stylesheet),
-                        output_style="compressed",
-                    ),
-                    encoding="utf8",
-                )
-            except ImportError:
-                failed_to_import_sass = True
-
-        str_target_path = "./" + str(target_path)
-        sheets.append(str_target_path) if str_target_path not in sheets else None
-
-    if failed_to_import_sass:
-        console.error(
-            'The `libsass` package is required to compile sass/scss stylesheet files. Run `pip install "libsass>=0.23.0"`.'
-        )
-
-    return templates.styles_template(stylesheets=sheets)
+    pass
 
 
 def _compile_component(component: Component | StatefulComponent) -> str:
@@ -340,7 +231,7 @@ def _compile_component(component: Component | StatefulComponent) -> str:
     Returns:
         The compiled component.
     """
-    return templates.component_template(component=component)
+    pass
 
 
 def _compile_memo_components(

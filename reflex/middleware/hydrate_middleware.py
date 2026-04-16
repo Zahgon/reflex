@@ -32,20 +32,4 @@ class HydrateMiddleware(Middleware):
         Returns:
             An optional delta or list of state updates to return.
         """
-        # If this is not the hydrate event, return None
-        if event.name != get_hydrate_event(state):
-            return None
-
-        # Clear client storage, to respect clearing cookies
-        state._reset_client_storage()
-
-        # Mark state as not hydrated (until on_loads are complete)
-        setattr(state, constants.CompileVars.IS_HYDRATED, False)
-
-        # Get the initial state.
-        delta = await _resolve_delta(state.dict())
-        # since a full dict was captured, clean any dirtiness
-        state._clean()
-
-        # Return the state update.
-        return StateUpdate(delta=delta, events=[])
+        pass

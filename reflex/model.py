@@ -39,11 +39,7 @@ def _safe_db_url_for_logging(url: str) -> str:
 
 
 def _print_db_not_available(*args, **kwargs):
-    msg = (
-        "Database is not available. Please install the required packages: "
-        "`pip install reflex[db]`."
-    )
-    raise ImportError(msg)
+    pass
 
 
 class _ClassThatErrorsOnInit:
@@ -288,24 +284,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
         Returns:
             Formatted string for display
         """
-        current = rev.revision
-        message = rev.doc
-
-        # Determine if this migration is applied
-        if current_rev is None:
-            is_applied = False
-        elif current == current_rev:
-            is_applied = True
-            current_reached_ref[0] = True
-        else:
-            is_applied = not current_reached_ref[0]
-
-        # Show checkmark or X with colors
-        status_icon = "[green]✓[/green]" if is_applied else "[red]✗[/red]"
-        head_marker = " (head)" if rev.is_head else ""
-
-        # Format output with message
-        return f"  [{status_icon}] {current}{head_marker}, {message}"
+        pass
 
     def get_db_status() -> dict[str, bool]:
         """Checks the status of the database connection.
@@ -339,18 +318,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
         Returns:
             The serialized object as a dictionary.
         """
-        base_fields = m.model_dump()
-        relationships = {}
-        # SQLModel relationships do not appear in __fields__, but should be included if present.
-        for name in m.__sqlmodel_relationships__:
-            with suppress(
-                sqlalchemy.orm.exc.DetachedInstanceError  # This happens when the relationship was never loaded and the session is closed.
-            ):
-                relationships[name] = getattr(m, name)
-        return {
-            **base_fields,
-            **relationships,
-        }
+        pass
 
     class Model(sqlmodel.SQLModel):
         """Base class to define a table in the database.
@@ -370,8 +338,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
         @staticmethod
         def create_all():
             """Create all the tables."""
-            engine = get_engine()
-            ModelRegistry.get_metadata().create_all(engine)
+            pass
 
         @staticmethod
         def get_db_engine():
@@ -417,16 +384,12 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
             Returns:
                 False - Indicating that the default rendering should be used.
             """
-            autogen_context.imports.add("import sqlmodel")
-            return False
+            pass
 
         @classmethod
         def alembic_init(cls):
             """Initialize alembic for the project."""
-            alembic.command.init(
-                config=alembic.config.Config(environment.ALEMBIC_CONFIG.get()),
-                directory=str(environment.ALEMBIC_CONFIG.get().parent / "alembic"),
-            )
+            pass
 
         @classmethod
         def get_migration_history(cls):
@@ -435,17 +398,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
             Returns:
                 tuple: (current_revision, revisions_list) where revisions_list is in chronological order
             """
-            # Get current revision from database
-            with cls.get_db_engine().connect() as connection:
-                context = MigrationContext.configure(connection)
-                current_rev = context.get_current_revision()
-
-            # Get all revisions from base to head
-            _, script_dir = cls._alembic_config()
-            revisions = list(script_dir.walk_revisions())
-            revisions.reverse()  # Reverse to get chronological order (base first)
-
-            return current_rev, revisions
+            pass
 
         @classmethod
         def alembic_autogenerate(
@@ -488,11 +441,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
             ):
                 # Carry the sqlmodel default as server_default so that newly added
                 # columns get the desired default value in existing rows.
-                if op.column.default is not None and op.column.server_default is None:
-                    op.column.server_default = sqlalchemy.DefaultClause(
-                        sqlalchemy.sql.expression.literal(op.column.default.arg),
-                    )
-                return op
+                pass
 
             def run_autogenerate(rev: str, context: MigrationContext):
                 revision_context.run_autogenerate(rev, context)
@@ -535,18 +484,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
                 connection: SQLAlchemy connection to use when performing upgrade.
                 to_rev: Revision to migrate towards.
             """
-            config, script_directory = cls._alembic_config()
-
-            def run_upgrade(rev: str, context: MigrationContext):
-                return script_directory._upgrade_revs(to_rev, rev)
-
-            with alembic.runtime.environment.EnvironmentContext(
-                config=config,
-                script=script_directory,
-                fn=run_upgrade,
-            ) as env:
-                env.configure(connection=connection)
-                env.run_migrations()
+            pass
 
         @classmethod
         def migrate(cls, autogenerate: bool = False) -> bool | None:
@@ -570,17 +508,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
                 True - indicating the process was successful.
                 None - indicating the process was skipped.
             """
-            if not environment.ALEMBIC_CONFIG.get().exists():
-                return None
-
-            with cls.get_db_engine().connect() as connection:
-                cls._alembic_upgrade(connection=connection)
-                if autogenerate:
-                    changes_detected = cls.alembic_autogenerate(connection=connection)
-                    if changes_detected:
-                        cls._alembic_upgrade(connection=connection)
-                connection.commit()
-            return True
+            pass
 
         @classmethod
         def select(cls):
@@ -589,7 +517,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
             Returns:
                 The select statement.
             """
-            return sqlmodel.select(cls)
+            pass
 
     ModelRegistry.register(Model)
 
@@ -602,7 +530,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
         Returns:
             A database session.
         """
-        return sqlmodel.Session(get_engine(url))
+        pass
 
     def asession(url: str | None = None) -> AsyncSession:
         """Get an async sqlmodel session to interact with the database.
@@ -618,16 +546,7 @@ if find_spec("sqlmodel") and find_spec("sqlalchemy") and find_spec("pydantic"):
         Returns:
             An async database session.
         """
-        global _AsyncSessionLocal
-        if url not in _AsyncSessionLocal:
-            _AsyncSessionLocal[url] = sqlalchemy.ext.asyncio.async_sessionmaker(
-                bind=get_async_engine(url),
-                class_=AsyncSession,
-                expire_on_commit=False,
-                autocommit=False,
-                autoflush=False,
-            )
-        return _AsyncSessionLocal[url]()
+        pass
 
 else:
     get_db_status = _print_db_not_available

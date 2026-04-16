@@ -250,7 +250,7 @@ def new_process(
     console.debug(f"Running command: {non_empty_args}")
 
     def subprocess_p_open(args: subprocess._CMD, **kwargs):
-        return subprocess.Popen(args, **kwargs)
+        pass
 
     fn: Callable[..., subprocess.CompletedProcess[str] | subprocess.Popen[str]] = (
         subprocess.run if run else subprocess_p_open
@@ -304,8 +304,7 @@ def run_concurrently(*fns: Callable | tuple) -> None:
     Args:
         *fns: The functions to run.
     """
-    with run_concurrently_context(*fns):
-        pass
+    pass
 
 
 def stream_logs(
@@ -399,8 +398,7 @@ def show_logs(message: str, process: subprocess.Popen):
         message: The message to display.
         process: The process.
     """
-    for _ in stream_logs(message, process):
-        pass
+    pass
 
 
 def show_status(
@@ -422,19 +420,7 @@ def show_status(
     Returns:
         The lines of the process output.
     """
-    lines = []
-
-    with console.status(message) as status:
-        for line in stream_logs(
-            message,
-            process,
-            suppress_errors=suppress_errors,
-            analytics_enabled=analytics_enabled,
-            prior_logs=prior_logs,
-        ):
-            status.update(f"{message} {line}")
-            lines.append(line)
-        return lines
+    pass
 
 
 def show_progress(message: str, process: subprocess.Popen, checkpoints: list[str]):
@@ -461,7 +447,7 @@ def show_progress(message: str, process: subprocess.Popen, checkpoints: list[str
 
 def atexit_handler():
     """Display a custom message with the current time when exiting an app."""
-    console.log("Reflex app stopped.")
+    pass
 
 
 def get_command_with_loglevel(command: list[str]) -> list[str]:
@@ -475,12 +461,7 @@ def get_command_with_loglevel(command: list[str]) -> list[str]:
     Returns:
         The updated command list
     """
-    npm_path = path_ops.get_npm_path()
-    npm_path = str(npm_path) if npm_path else None
-
-    if command[0] == npm_path:
-        return [*command, "--loglevel", "silly"]
-    return command
+    pass
 
 
 def run_process_with_fallbacks(
@@ -502,40 +483,7 @@ def run_process_with_fallbacks(
         prior_logs: The logs of the prior processes that have been run.
         **kwargs: Kwargs to pass to new_process function.
     """
-    process = new_process(get_command_with_loglevel(args), **kwargs)
-    if not fallbacks:
-        # No fallback given, or this _is_ the fallback command.
-        show_status(
-            show_status_message,
-            process,
-            analytics_enabled=analytics_enabled,
-            prior_logs=prior_logs,
-        )
-    else:
-        # Suppress errors for initial command, because we will try to fallback
-        logs = show_status(show_status_message, process, suppress_errors=True)
-
-        current_fallback = fallbacks[0] if not isinstance(fallbacks, str) else fallbacks
-        next_fallbacks = fallbacks[1:] if not isinstance(fallbacks, str) else None
-
-        if process.returncode != 0:
-            # retry with fallback command.
-            fallback_with_args = (
-                [current_fallback, *args[1:]]
-                if isinstance(current_fallback, str)
-                else [*current_fallback, *args[1:]]
-            )
-            console.warn(
-                f"There was an error running command: {args}. Falling back to: {fallback_with_args}."
-            )
-            run_process_with_fallbacks(
-                fallback_with_args,
-                show_status_message=show_status_message,
-                fallbacks=next_fallbacks,
-                analytics_enabled=analytics_enabled,
-                prior_logs=(*prior_logs, tuple(logs)),
-                **kwargs,
-            )
+    pass
 
 
 def execute_command_and_return_output(command: str) -> str | None:

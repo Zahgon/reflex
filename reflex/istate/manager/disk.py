@@ -81,22 +81,11 @@ class StateManagerDisk(StateManager):
         Returns:
             The states directory.
         """
-        return prerequisites.get_states_dir()
+        pass
 
     def _purge_expired_states(self):
         """Purge expired states from the disk."""
-        for path in path_ops.ls(self.states_directory):
-            # check path is a pickle file
-            if path.suffix != ".pkl":
-                continue
-
-            # load last edited field from file
-            last_edited = path.stat().st_mtime
-
-            # check if the file is older than the token expiration time
-            if time.time() - last_edited > self.token_expiration:
-                # remove the file
-                path.unlink()
+        pass
 
     def token_path(self, token: StateToken) -> Path:
         """Get the path for a token.
@@ -209,44 +198,11 @@ class StateManagerDisk(StateManager):
             token: The token used to identify the state object.
             substate: The substate to set.
         """
-        substate_token = token.with_cls(type(substate))
-
-        if token.get_and_reset_touched_state(substate):
-            pickle_state = token.serialize(substate)
-            if pickle_state:
-                if not self.states_directory.exists():
-                    self.states_directory.mkdir(parents=True, exist_ok=True)
-                await run_in_thread(
-                    lambda: self.token_path(substate_token).write_bytes(pickle_state),
-                )
-
-        if isinstance(token, BaseStateToken) and isinstance(substate, BaseState):
-            for substate_substate in substate.substates.values():
-                await self.set_state_for_substate(token, substate_substate)
+        pass
 
     async def _process_write_queue_delay(self):
         """Wait for the debounce period before processing the write queue again."""
-        now = time.time()
-        if self._write_queue:
-            # There are still items in the queue, schedule another run.
-            next_write_in = max(
-                0,
-                min(
-                    self._write_debounce_seconds - (now - item.timestamp)
-                    for item in self._write_queue.values()
-                ),
-            )
-            await asyncio.sleep(next_write_in)
-        elif self._write_debounce_seconds > 0:
-            # No items left, wait a bit before checking again.
-            await asyncio.sleep(self._write_debounce_seconds)
-        else:
-            # Debounce is disabled, so sleep until the next token expiration.
-            oldest_token_last_touch = min(
-                self._token_last_touched.values(), default=now
-            )
-            next_expiration_in = self.token_expiration - (now - oldest_token_last_touch)
-            await asyncio.sleep(next_expiration_in)
+        pass
 
     async def _process_write_queue(self):
         """Long running task that checks for states to write to disk.
@@ -254,68 +210,15 @@ class StateManagerDisk(StateManager):
         Raises:
             asyncio.CancelledError: When the task is cancelled.
         """
-        while True:
-            try:
-                now = time.time()
-                # sort the _write_queue by oldest timestamp and exclude items younger than debounce time
-                items_to_write = sorted(
-                    (
-                        item
-                        for item in self._write_queue.values()
-                        if now - item.timestamp >= self._write_debounce_seconds
-                    ),
-                    key=lambda item: item.timestamp,
-                )
-                for item in items_to_write:
-                    token = item.token
-                    await self.set_state_for_substate(
-                        token, self._write_queue.pop(token).state
-                    )
-                # Check for expired states to purge.
-                for cache_key, last_touched in list(self._token_last_touched.items()):
-                    if now - last_touched > self.token_expiration:
-                        self._token_last_touched.pop(cache_key)
-                        self.states.pop(cache_key, None)
-                await run_in_thread(self._purge_expired_states)
-                await self._process_write_queue_delay()
-            except asyncio.CancelledError:  # noqa: PERF203
-                await self._flush_write_queue()
-                raise
-            except Exception as e:
-                console.error(f"Error processing write queue: {e!r}")
-                if e.args == ("cannot schedule new futures after shutdown",):
-                    # Event loop is shutdown, nothing else we can really do...
-                    return
-                await self._process_write_queue_delay()
+        pass
 
     async def _flush_write_queue(self):
         """Flush any remaining items in the write queue to disk."""
-        outstanding_items = list(self._write_queue.values())
-        n_outstanding_items = len(outstanding_items)
-        self._write_queue.clear()
-        # When the task is cancelled, write all remaining items to disk.
-        console.debug(
-            f"StateManagerDisk._flush_write_queue: writing {n_outstanding_items} remaining items to disk"
-        )
-        for item in outstanding_items:
-            await self.set_state_for_substate(
-                item.token,
-                item.state,
-            )
-        console.debug(
-            f"StateManagerDisk._flush_write_queue: Finished writing {n_outstanding_items} items"
-        )
+        pass
 
     async def _schedule_process_write_queue(self):
         """Schedule the write queue processing task if not already running."""
-        if self._write_queue_task is None or self._write_queue_task.done():
-            async with self._state_manager_lock:
-                if self._write_queue_task is None or self._write_queue_task.done():
-                    self._write_queue_task = asyncio.create_task(
-                        self._process_write_queue(),
-                        name="StateManagerDisk|WriteQueueProcessor",
-                    )
-                    await asyncio.sleep(0)  # Yield to allow the task to start.
+        pass
 
     @override
     async def set_state(
@@ -331,20 +234,7 @@ class StateManagerDisk(StateManager):
             state: The state to set.
             context: The state modification context.
         """
-        token = self._coerce_token(token)
-        if self._write_debounce_seconds > 0:
-            # Deferred write to reduce disk IO overhead.
-            if token not in self._write_queue:
-                self._write_queue[token] = QueueItem(
-                    token=token,
-                    state=state,
-                    timestamp=time.time(),
-                )
-        else:
-            # Immediate write to disk.
-            await self.set_state_for_substate(token, state)
-        # Ensure the processing task is scheduled to handle expirations and any deferred writes.
-        await self._schedule_process_write_queue()
+        pass
 
     @override
     @contextlib.asynccontextmanager
@@ -360,18 +250,7 @@ class StateManagerDisk(StateManager):
         Yields:
             The state for the token.
         """
-        token = self._coerce_token(token)
-        # Disk state manager ignores the substate suffix and always returns the top-level state.
-        lock_key = token.lock_key
-        if lock_key not in self._states_locks:
-            async with self._state_manager_lock:
-                if lock_key not in self._states_locks:
-                    self._states_locks[lock_key] = asyncio.Lock()
-
-        async with self._states_locks[lock_key]:
-            state = await self.get_state(token)
-            yield state
-            await self.set_state(token, state, **context)
+        pass
 
     async def close(self):
         """Close the state manager, flushing any pending writes to disk."""

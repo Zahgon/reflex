@@ -112,20 +112,4 @@ def auth_codespace(_request: Request) -> HTMLResponse:
     Returns:
         An HTML response with an embedded script to redirect back to the app.
     """
-    return HTMLResponse(
-        f"""
-    <html>
-        <head>
-            <title>Reflex Github Codespace Forward Successfully Authenticated</title>
-        </head>
-        <body>
-            <center>
-                <h2>Successfully Authenticated</h2>
-            </center>
-            <script language="javascript">
-                {redirect_script()}
-            </script>
-        </body>
-    </html>
-    """
-    )
+    pass

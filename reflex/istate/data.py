@@ -81,24 +81,12 @@ class HeaderData(_HeaderData):
         Returns:
             A HeaderData object initialized with the provided router_data.
         """
-        return cls(
-            **{
-                snake_case_key: v
-                for k, v in router_data.get(constants.RouteVar.HEADERS, {}).items()
-                if v
-                and (snake_case_key := format.to_snake_case(k)) in _HEADER_DATA_FIELDS
-            },
-            raw_headers=_FrozenDictStrStr(**{
-                k: v
-                for k, v in router_data.get(constants.RouteVar.HEADERS, {}).items()
-                if v
-            }),
-        )
+        pass
 
 
 @serializer(to=dict)
 def _serialize_header_data(obj: HeaderData) -> dict:
-    return {k.name: getattr(obj, k.name) for k in dataclasses.fields(obj)}
+    pass
 
 
 @serializer(to=dict)
@@ -111,7 +99,7 @@ def serialize_frozen_dict_str_str(obj: _FrozenDictStrStr) -> dict:
     Returns:
         A dict representation of the _FrozenDictStrStr object.
     """
-    return dict(obj._data)
+    pass
 
 
 class ReflexURL(str, _NetlocResultMixinStr):
@@ -170,22 +158,12 @@ class PageData:
         Returns:
             A PageData object initialized with the provided router_data.
         """
-        host = router_data.get(constants.RouteVar.HEADERS, {}).get("origin", "")
-        path = router_data.get(constants.RouteVar.PATH, "")
-        raw_path = router_data.get(constants.RouteVar.ORIGIN, "")
-        return cls(
-            host=host,
-            path=path,
-            raw_path=raw_path,
-            full_path=f"{host}{path}",
-            full_raw_path=f"{host}{raw_path}",
-            params=router_data.get(constants.RouteVar.QUERY, {}),
-        )
+        pass
 
 
 @serializer(to=dict)
 def _serialize_page_data(obj: PageData) -> dict:
-    return {key.name: getattr(obj, key.name) for key in dataclasses.fields(obj)}
+    pass
 
 
 @dataclasses.dataclass(frozen=True)
@@ -206,16 +184,12 @@ class SessionData:
         Returns:
             A SessionData object initialized with the provided router_data.
         """
-        return cls(
-            client_token=router_data.get(constants.RouteVar.CLIENT_TOKEN, ""),
-            client_ip=router_data.get(constants.RouteVar.CLIENT_IP, ""),
-            session_id=router_data.get(constants.RouteVar.SESSION_ID, ""),
-        )
+        pass
 
 
 @serializer(to=dict)
 def _serialize_session_data(obj: SessionData) -> dict:
-    return {key.name: getattr(obj, key.name) for key in dataclasses.fields(obj)}
+    pass
 
 
 @dataclasses.dataclass(frozen=True)
@@ -253,16 +227,7 @@ class RouterData:
         Returns:
             A RouterData object initialized with the provided router_data.
         """
-        return cls(
-            session=SessionData.from_router_data(router_data),
-            headers=HeaderData.from_router_data(router_data),
-            _page=PageData.from_router_data(router_data),
-            url=ReflexURL(
-                router_data.get(constants.RouteVar.HEADERS, {}).get("origin", "")
-                + router_data.get(constants.RouteVar.ORIGIN, "")
-            ),
-            route_id=router_data.get(constants.RouteVar.PATH, ""),
-        )
+        pass
 
 
 @serializer(to=dict)
@@ -275,10 +240,4 @@ def serialize_router_data(obj: RouterData) -> dict:
     Returns:
         A dict representation of the RouterData object.
     """
-    return {
-        "session": obj.session,
-        "headers": obj.headers,
-        "page": obj._page,
-        "url": obj.url,
-        "route_id": obj.route_id,
-    }
+    pass

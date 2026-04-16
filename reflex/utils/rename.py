@@ -23,29 +23,7 @@ def rename_path_up_tree(full_path: str | Path, old_name: str, new_name: str) -> 
     Returns:
          The updated path after renaming.
     """
-    current_path = Path(full_path)
-    new_path = None
-
-    while True:
-        directory, base = current_path.parent, current_path.name
-        # Stop renaming when we reach the root dir (which contains rxconfig.py)
-        if current_path.is_dir() and (current_path / "rxconfig.py").exists():
-            new_path = current_path
-            break
-
-        if old_name == base.removesuffix(constants.Ext.PY):
-            new_base = base.replace(old_name, new_name)
-            new_path = directory / new_base
-            current_path.rename(new_path)
-            console.debug(f"Renamed {current_path} -> {new_path}")
-            current_path = new_path
-        else:
-            new_path = current_path
-
-        # Move up the directory tree
-        current_path = directory
-
-    return new_path
+    pass
 
 
 def rename_app(new_app_name: str, loglevel: constants.LogLevel):
@@ -58,34 +36,7 @@ def rename_app(new_app_name: str, loglevel: constants.LogLevel):
     Raises:
         SystemExit: If the command is not ran in the root dir or the app module cannot be imported.
     """
-    # Set the log level.
-    console.set_log_level(loglevel)
-
-    if not constants.Config.FILE.exists():
-        console.error(
-            "No rxconfig.py found. Make sure you are in the root directory of your app."
-        )
-        raise SystemExit(1)
-
-    sys.path.insert(0, str(Path.cwd()))
-
-    config = get_config()
-    module_path = get_module_path(config.module)
-    if module_path is None:
-        console.error(f"Could not find module {config.module}.")
-        raise SystemExit(1)
-
-    console.info(f"Renaming app directory to {new_app_name}.")
-    process_directory(
-        Path.cwd(),
-        config.app_name,
-        new_app_name,
-        exclude_dirs=[constants.Dirs.WEB, constants.Dirs.APP_ASSETS],
-    )
-
-    rename_path_up_tree(module_path, config.app_name, new_app_name)
-
-    console.success(f"App directory renamed to [bold]{new_app_name}[/bold].")
+    pass
 
 
 def rename_imports_and_app_name(file_path: str | Path, old_name: str, new_name: str):
@@ -146,24 +97,4 @@ def process_directory(
         exclude_dirs: List of directory names to exclude. Defaults to None.
         extensions: List of file extensions to process.
     """
-    exclude_dirs = exclude_dirs or []
-    extensions = extensions or [
-        constants.Ext.PY,
-        constants.Ext.MD,
-    ]  # include .md files, typically used in reflex-web.
-    extensions_set = {ext.lstrip(".") for ext in extensions}
-    directory = Path(directory)
-
-    root_exclude_dirs = {directory / exclude_dir for exclude_dir in exclude_dirs}
-
-    files = (
-        p.resolve()
-        for p in directory.glob("**/*")
-        if p.is_file() and p.suffix.lstrip(".") in extensions_set
-    )
-
-    for file_path in files:
-        if not any(
-            file_path.is_relative_to(exclude_dir) for exclude_dir in root_exclude_dirs
-        ):
-            rename_imports_and_app_name(file_path, old_name, new_name)
+    pass

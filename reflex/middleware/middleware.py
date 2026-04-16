@@ -46,4 +46,4 @@ class Middleware(ABC):
         Returns:
             An optional state to return.
         """
-        return update
+        pass

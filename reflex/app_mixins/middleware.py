@@ -27,10 +27,7 @@ class MiddlewareMixin(AppMixin):
             middleware: The middleware to add.
             index: The index to add the middleware at.
         """
-        if index is None:
-            self._middlewares.append(middleware)
-        else:
-            self._middlewares.insert(index, middleware)
+        pass
 
     async def _preprocess(self, state: BaseState, event: Event) -> StateUpdate | None:
         """Preprocess the event.
@@ -48,13 +45,7 @@ class MiddlewareMixin(AppMixin):
         Returns:
             An optional state to return.
         """
-        for middleware in self._middlewares:
-            out = middleware.preprocess(app=self, state=state, event=event)  # pyright: ignore [reportArgumentType]
-            if inspect.isawaitable(out):
-                out = await out
-            if out is not None:
-                return out
-        return None
+        pass
 
     async def _postprocess(
         self, state: BaseState, event: Event, update: StateUpdate
@@ -72,14 +63,4 @@ class MiddlewareMixin(AppMixin):
         Returns:
             The state update to return.
         """
-        out = update
-        for middleware in self._middlewares:
-            out = middleware.postprocess(
-                app=self,  # pyright: ignore [reportArgumentType]
-                state=state,
-                event=event,
-                update=update,
-            )
-            if inspect.isawaitable(out):
-                out = await out
-        return out  # pyright: ignore[reportReturnType]
+        pass

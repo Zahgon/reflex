@@ -348,9 +348,7 @@ def validate_frontend_dependencies(init: bool = True):
 
 def remove_existing_bun_installation():
     """Remove existing bun installation."""
-    console.debug("Removing existing bun installation.")
-    if Path(get_config().bun_path).exists():
-        path_ops.rm(constants.Bun.ROOT_PATH)
+    pass
 
 
 @cached_procedure(

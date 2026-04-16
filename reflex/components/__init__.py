@@ -52,18 +52,10 @@ class _AliasLoader(importlib.abc.Loader):
         self.target_name = target_name
 
     def create_module(self, spec: importlib.machinery.ModuleSpec) -> ModuleType | None:
-        return None
+        pass
 
     def exec_module(self, module: ModuleType) -> None:
-        target = importlib.import_module(self.target_name)
-        # Make the alias point to the real module.
-        module.__dict__.update(target.__dict__)
-        module.__path__ = getattr(target, "__path__", [])
-        module.__file__ = getattr(target, "__file__", None)
-        module.__loader__ = self
-        # Register the target module under the alias name so subsequent
-        # imports resolve immediately.
-        sys.modules[module.__name__] = target
+        pass
 
 
 class _ComponentsRedirect(importlib.abc.MetaPathFinder):

@@ -180,9 +180,7 @@ class AppHarness:
         Returns:
             The state name
         """
-        return reflex.utils.format.to_snake_case(
-            f"{self.app_name}___{self.app_name}___" + state_cls_name
-        )
+        pass
 
     def get_full_state_name(self, path: list[str]) -> str:
         """Get the full state name for the given state class name.
@@ -193,10 +191,7 @@ class AppHarness:
         Returns:
             The full state name
         """
-        # NOTE: using State.get_name() somehow causes trouble here
-        # path = [State.get_name()] + [self.get_state_name(p) for p in path] # noqa: ERA001
-        path = ["reflex___state____state"] + [self.get_state_name(p) for p in path]
-        return ".".join(path)
+        pass
 
     def _get_globals_from_signature(self, func: Any) -> dict[str, Any]:
         """Get the globals from a function or module object.
@@ -307,28 +302,7 @@ class AppHarness:
 
         async def _shutdown(*args, **kwargs) -> None:
             # ensure redis is closed before event loop
-            if (
-                self.app_instance is not None
-                and self.app_instance._state_manager is not None
-            ):
-                with contextlib.suppress(ValueError):
-                    await self.app_instance._state_manager.close()
-
-            # socketio shutdown handler
-            if self.app_instance is not None and self.app_instance.sio is not None:
-                with contextlib.suppress(TypeError):
-                    await self.app_instance.sio.shutdown()
-
-            # sqlalchemy async engine shutdown handler
-            if find_spec("sqlmodel"):
-                try:
-                    async_engine = reflex.model.get_async_engine(None)
-                except ValueError:
-                    pass
-                else:
-                    await async_engine.dispose()
-
-            await original_shutdown(*args, **kwargs)
+            pass
 
         return _shutdown
 
@@ -346,8 +320,7 @@ class AppHarness:
         self.backend.shutdown = self._get_backend_shutdown_handler()
 
         def _run_backend(context: contextvars.Context) -> None:
-            if self.backend is not None:
-                context.run(self.backend.run)
+            pass
 
         with chdir(self.app_path):
             print(  # noqa: T201
@@ -404,17 +377,7 @@ class AppHarness:
             raise RuntimeError(msg)
 
         def consume_frontend_output():
-            while True:
-                try:
-                    line = (
-                        self.frontend_process.stdout.readline()  # pyright: ignore [reportOptionalMemberAccess]
-                    )
-                # catch I/O operation on closed file.
-                except ValueError as e:
-                    console.error(str(e))
-                    break
-                if not line:
-                    break
+            pass
 
         self.frontend_output_thread = threading.Thread(target=consume_frontend_output)
         self.frontend_output_thread.start()
@@ -552,17 +515,7 @@ class AppHarness:
             return value of target() if truthy within timeout
             False if timeout elapses
         """
-        if timeout is None:
-            timeout = DEFAULT_TIMEOUT
-        if step is None:
-            step = POLL_INTERVAL
-        deadline = time.time() + timeout
-        while time.time() < deadline:
-            success = await target()
-            if success:
-                return success
-            await asyncio.sleep(step)
-        return False
+        pass
 
     def _poll_for_servers(self, timeout: TimeoutType = None) -> socket.socket:
         """Poll backend server for listening sockets.
@@ -621,63 +574,7 @@ class AppHarness:
         Raises:
             RuntimeError: when selenium is not importable or frontend is not running
         """
-        if not has_selenium:
-            msg = (
-                "Frontend functionality requires `selenium` to be installed, "
-                "and it could not be imported."
-            )
-            raise RuntimeError(msg)
-        if self.frontend_url is None:
-            msg = "Frontend is not running."
-            raise RuntimeError(msg)
-        want_headless = False
-        if environment.APP_HARNESS_HEADLESS.get():
-            want_headless = True
-        if driver_clz is None:
-            requested_driver = environment.APP_HARNESS_DRIVER.get()
-            driver_clz = getattr(webdriver, requested_driver)  # pyright: ignore [reportPossiblyUnboundVariable]
-            if driver_options is None:
-                driver_options = getattr(webdriver, f"{requested_driver}Options")()  # pyright: ignore [reportPossiblyUnboundVariable]
-        if driver_clz is webdriver.Chrome:  # pyright: ignore [reportPossiblyUnboundVariable]
-            if driver_options is None:
-                from selenium.webdriver.chrome.options import Options
-
-                driver_options = Options()  # pyright: ignore [reportPossiblyUnboundVariable]
-            driver_options.add_argument("--class=AppHarness")
-            if want_headless:
-                driver_options.add_argument("--headless=new")
-        elif driver_clz is webdriver.Firefox:  # pyright: ignore [reportPossiblyUnboundVariable]
-            if driver_options is None:
-                from selenium.webdriver.firefox.options import Options
-
-                driver_options = Options()  # pyright: ignore [reportPossiblyUnboundVariable]
-            if want_headless:
-                driver_options.add_argument("-headless")
-        elif driver_clz is webdriver.Edge:  # pyright: ignore [reportPossiblyUnboundVariable]
-            if driver_options is None:
-                from selenium.webdriver.edge.options import Options
-
-                driver_options = Options()  # pyright: ignore [reportPossiblyUnboundVariable]
-            if want_headless:
-                driver_options.add_argument("headless")
-        if driver_options is None:
-            msg = f"Could not determine options for {driver_clz}"
-            raise RuntimeError(msg)
-        if args := environment.APP_HARNESS_DRIVER_ARGS.get():
-            for arg in args.split(","):
-                driver_options.add_argument(arg)
-        if driver_option_args is not None:
-            for arg in driver_option_args:
-                driver_options.add_argument(arg)
-        if driver_option_capabilities is not None:
-            for key, value in driver_option_capabilities.items():
-                driver_options.set_capability(key, value)
-        if driver_kwargs is None:
-            driver_kwargs = {}
-        driver = driver_clz(options=driver_options, **driver_kwargs)  # pyright: ignore [reportOptionalCall, reportArgumentType]
-        driver.get(self.frontend_url)
-        self._frontends.append(driver)
-        return driver
+        pass
 
     def token_manager(self) -> TokenManager:
         """Get the token manager for the app instance.
@@ -685,12 +582,7 @@ class AppHarness:
         Returns:
             The current token_manager attached to the app's EventNamespace.
         """
-        assert self.app_instance is not None
-        app_event_namespace = self.app_instance.event_namespace
-        assert app_event_namespace is not None
-        app_token_manager = app_event_namespace._token_manager
-        assert app_token_manager is not None
-        return app_token_manager
+        pass
 
     def poll_for_content(
         self,
@@ -711,13 +603,7 @@ class AppHarness:
         Raises:
             TimeoutError: when the timeout expires before text changes
         """
-        if not self._poll_for(
-            target=lambda: element.text != exp_not_equal,
-            timeout=timeout,
-        ):
-            msg = f"{element} content remains {exp_not_equal!r} while polling."
-            raise TimeoutError(msg)
-        return element.text
+        pass
 
     def poll_for_value(
         self,
@@ -738,16 +624,7 @@ class AppHarness:
         Raises:
             TimeoutError: when the timeout expires before value changes
         """
-        exp_not_equal = (
-            (exp_not_equal,) if isinstance(exp_not_equal, str) else exp_not_equal
-        )
-        if not self._poll_for(
-            target=lambda: element.get_attribute("value") not in exp_not_equal,
-            timeout=timeout,
-        ):
-            msg = f"{element} content remains {exp_not_equal!r} while polling."
-            raise TimeoutError(msg)
-        return element.get_attribute("value")
+        pass
 
     @staticmethod
     def poll_for_or_raise_timeout(
@@ -870,13 +747,7 @@ class Subdir404TCPServer(socketserver.TCPServer):
             request: the requesting socket
             client_address: (host, port) referring to the client's address.
         """
-        self.RequestHandlerClass(
-            request,
-            client_address,
-            self,
-            directory=str(self.root),  # pyright: ignore [reportCallIssue]
-            error_page_map=self.error_page_map,  # pyright: ignore [reportCallIssue]
-        )
+        pass
 
 
 class AppHarnessProd(AppHarness):
@@ -891,25 +762,7 @@ class AppHarnessProd(AppHarness):
     frontend_server: Subdir404TCPServer | None = None
 
     def _run_frontend(self):
-        web_root = (
-            self.app_path
-            / reflex.utils.prerequisites.get_web_dir()
-            / reflex.constants.Dirs.STATIC
-        )
-        config = reflex.config.get_config()
-        with Subdir404TCPServer(
-            ("", 0),
-            SimpleHTTPRequestHandlerCustomErrors,
-            root=web_root,
-            error_page_map={
-                404: web_root / config.prepend_frontend_path("/404.html").lstrip("/"),
-            },
-        ) as self.frontend_server:
-            frontend_path = config.frontend_path.strip("/")
-            self.frontend_url = "http://localhost:{1}".format(
-                *self.frontend_server.socket.getsockname()
-            ) + (f"/{frontend_path}/" if frontend_path else "/")
-            self.frontend_server.serve_forever()
+        pass
 
     def _start_frontend(self):
         # Set up the frontend.
@@ -963,8 +816,7 @@ class AppHarnessProd(AppHarness):
         self.backend.shutdown = self._get_backend_shutdown_handler()
 
         def _run_backend(context: contextvars.Context) -> None:
-            if self.backend is not None:
-                context.run(self.backend.run)
+            pass
 
         print(  # noqa: T201
             "Creating backend in a new thread..."

@@ -322,12 +322,7 @@ class StateProxy(wrapt.ObjectProxy):
         Returns:
             The state update.
         """
-        original_mutable = self._self_mutable
-        self._self_mutable = True
-        try:
-            return await self.__wrapped__._as_state_update(*args, **kwargs)
-        finally:
-            self._self_mutable = original_mutable
+        pass
 
 
 class ReadOnlyStateProxy(StateProxy):
@@ -496,16 +491,7 @@ class MutableProxy(wrapt.ObjectProxy):
         Returns:
             Whether the current function is called from dataclasses internal code.
         """
-        # Walk up the stack a bit to see if we are called from dataclasses
-        # internal code, for example `asdict` or `astuple`.
-        frame = inspect.currentframe()
-        for _ in range(5):
-            # Why not `inspect.stack()` -- this is much faster!
-            if not (frame := frame and frame.f_back):
-                break
-            if inspect.getfile(frame) == dataclasses.__file__:
-                return True
-        return False
+        pass
 
     def _wrap_recursive(self, value: Any) -> Any:
         """Wrap a value recursively if it is mutable.
@@ -516,22 +502,7 @@ class MutableProxy(wrapt.ObjectProxy):
         Returns:
             The wrapped value.
         """
-        # When called from dataclasses internal code, return the unwrapped value
-        if self._is_called_from_dataclasses_internal():
-            return value
-        # If we already have a proxy, unwrap and rewrap to make sure the state
-        # reference is up to date.
-        if isinstance(value, MutableProxy):
-            value = value.__wrapped__
-        # Recursively wrap mutable types.
-        if is_mutable_type(type(value)):
-            base_cls = globals()[self.__base_proxy__]
-            return base_cls(
-                wrapped=value,
-                state=self._self_state,
-                field_name=self._self_field_name,
-            )
-        return value
+        pass
 
     def _wrap_recursive_decorator(
         self, wrapped: Callable, instance: BaseState, args: list, kwargs: dict
@@ -549,7 +520,7 @@ class MutableProxy(wrapt.ObjectProxy):
         Returns:
             The result of the wrapped function (possibly wrapped in a MutableProxy).
         """
-        return self._wrap_recursive(wrapped(*args, **kwargs))
+        pass
 
     def __getattr__(self, __name: str) -> Any:
         """Get the attribute on the proxied object and return a proxy if mutable.
@@ -695,7 +666,7 @@ class MutableProxy(wrapt.ObjectProxy):
 
 def _unwrap_for_pickle(obj: T) -> T:
     """Return the object unchanged. Used by MutableProxy.__reduce_ex__."""
-    return obj
+    pass
 
 
 @serializer
@@ -708,10 +679,7 @@ def serialize_mutable_proxy(mp: MutableProxy):
     Returns:
         The wrapped object.
     """
-    obj = mp.__wrapped__
-    if can_serialize(type(obj)):
-        return serialize(obj)
-    return obj
+    pass
 
 
 _orig_json_encoder_default = json.JSONEncoder.default
@@ -727,11 +695,7 @@ def _json_encoder_default_wrapper(self: json.JSONEncoder, o: Any) -> Any:
     Returns:
         A JSON-able object.
     """
-    try:
-        return o.__wrapped__
-    except AttributeError:
-        pass
-    return _orig_json_encoder_default(self, o)
+    pass
 
 
 json.JSONEncoder.default = _json_encoder_default_wrapper

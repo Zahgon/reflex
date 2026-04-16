@@ -39,13 +39,7 @@ def get_package_json_and_hash(package_json_path: Path) -> tuple[PackageJson, str
     Returns:
         A tuple containing the content of package.json as a dictionary and its SHA-256 hash.
     """
-    with package_json_path.open("r") as file:
-        json_data = json.load(file)
-
-    # Calculate the hash
-    json_string = json.dumps(json_data, sort_keys=True)
-    hash_object = hashlib.sha256(json_string.encode())
-    return (json_data, hash_object.hexdigest())
+    pass
 
 
 class PackageJson(TypedDict):
@@ -72,16 +66,7 @@ def format_change(name: str, change: Change) -> str:
     Returns:
         A formatted string representing the changes.
     """
-    if not change.added and not change.removed:
-        return ""
-    added_str = ", ".join(sorted(change.added))
-    removed_str = ", ".join(sorted(change.removed))
-    change_str = f"{name}:\n"
-    if change.added:
-        change_str += f"  Added: {added_str}\n"
-    if change.removed:
-        change_str += f"  Removed: {removed_str}\n"
-    return change_str.strip()
+    pass
 
 
 def get_different_packages(
@@ -99,33 +84,7 @@ def get_different_packages(
         - The first `Change` contains the changes in the `dependencies` section.
         - The second `Change` contains the changes in the `devDependencies` section.
     """
-
-    def get_changes(old: dict[str, str], new: dict[str, str]) -> Change:
-        """Get the changes between two dictionaries.
-
-        Args:
-            old: The old dictionary of packages.
-            new: The new dictionary of packages.
-
-        Returns:
-            A `Change` named tuple containing the added and removed packages.
-        """
-        old_keys = set(old.keys())
-        new_keys = set(new.keys())
-        added = new_keys - old_keys
-        removed = old_keys - new_keys
-        return Change(added=added, removed=removed)
-
-    dependencies_change = get_changes(
-        old_package_json_content.get("dependencies", {}),
-        new_package_json_content.get("dependencies", {}),
-    )
-    dev_dependencies_change = get_changes(
-        old_package_json_content.get("devDependencies", {}),
-        new_package_json_content.get("devDependencies", {}),
-    )
-
-    return dependencies_change, dev_dependencies_change
+    pass
 
 
 def kill(proc_pid: int):
@@ -178,61 +137,7 @@ def run_process_and_launch_url(
         run_command: The command to run.
         backend_present: Whether the backend is present.
     """
-    from reflex.utils import processes
-
-    json_file_path = get_web_dir() / constants.PackageJson.PATH
-    last_content, last_hash = get_package_json_and_hash(json_file_path)
-    process = None
-    first_run = True
-
-    while True:
-        if process is None:
-            kwargs: dict[str, Any] = {
-                "env": {
-                    **os.environ,
-                    "NO_COLOR": "1",
-                }
-            }
-            if constants.IS_WINDOWS and backend_present:
-                kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP  # pyright: ignore [reportAttributeAccessIssue]
-            process = processes.new_process(
-                run_command,
-                cwd=get_web_dir(),
-                shell=constants.IS_WINDOWS,
-                **kwargs,
-            )
-            global frontend_process
-            frontend_process = process
-        if process.stdout:
-            for line in processes.stream_logs("Starting frontend", process):
-                new_content, new_hash = get_package_json_and_hash(json_file_path)
-                if new_hash != last_hash:
-                    dependencies_change, dev_dependencies_change = (
-                        get_different_packages(last_content, new_content)
-                    )
-                    last_content, last_hash = new_content, new_hash
-                    console.info(
-                        "Detected changes in package.json.\n"
-                        + format_change("Dependencies", dependencies_change)
-                        + format_change("Dev Dependencies", dev_dependencies_change)
-                    )
-
-                match = re.search(constants.ReactRouter.FRONTEND_LISTENING_REGEX, line)
-                if match:
-                    if first_run:
-                        url = match.group(1)
-                        if get_config().frontend_path != "":
-                            url = urljoin(url, get_config().frontend_path)
-
-                        notify_frontend(url, backend_present)
-                        if backend_present:
-                            notify_backend()
-                        first_run = False
-                    else:
-                        console.print("Frontend is restarting...")
-
-        if process is not None:
-            break  # while True
+    pass
 
 
 def run_frontend(root: Path, port: str, backend_present: bool = True):
@@ -243,22 +148,7 @@ def run_frontend(root: Path, port: str, backend_present: bool = True):
         port: The port to run the frontend on.
         backend_present: Whether the backend is present.
     """
-    from reflex.utils import js_runtimes
-
-    # validate dependencies before run
-    js_runtimes.validate_frontend_dependencies(init=False)
-
-    # Run the frontend in development mode.
-    console.rule("[bold green]App Running")
-    os.environ["PORT"] = str(get_config().frontend_port if port is None else port)
-    run_process_and_launch_url(
-        [
-            *js_runtimes.get_js_package_executor(raise_on_none=True)[0],
-            "run",
-            "dev",
-        ],
-        backend_present,
-    )
+    pass
 
 
 def notify_app_running():
@@ -272,23 +162,7 @@ def get_frontend_mount():
     Returns:
         A Mount serving the compiled frontend static files.
     """
-    from starlette.routing import Mount
-    from starlette.staticfiles import StaticFiles
-
-    from reflex.utils import prerequisites
-
-    config = get_config()
-
-    return Mount(
-        config.prepend_frontend_path("/"),
-        app=StaticFiles(
-            directory=prerequisites.get_web_dir()
-            / constants.Dirs.STATIC
-            / config.frontend_path.strip("/"),
-            html=True,
-        ),
-        name="frontend",
-    )
+    pass
 
 
 def _frontend_prod_app():
@@ -297,9 +171,7 @@ def _frontend_prod_app():
     Returns:
         A Starlette ASGI app serving static files.
     """
-    from starlette.applications import Starlette
-
-    return Starlette(routes=[get_frontend_mount()])
+    pass
 
 
 def run_frontend_prod(host: str, port: int):
